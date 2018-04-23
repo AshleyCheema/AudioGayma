@@ -7,6 +7,10 @@ public class AudioData : MonoBehaviour
     public float DbValue;
     public float rms;
     public float pitchValue;
+    public float frequency;
+    public int samplerate = 11024;
+
+    public GameObject go;
 
     private const int SampleRate = 1024;
     private const float RefValue = 0.1f;
@@ -18,7 +22,7 @@ public class AudioData : MonoBehaviour
 
     private Transform[] visualList;
     private float[] visualScale;
-    private int amnVisual = 2;
+    private int amnVisual = 4;
 
     // Use this for initialization
     void Start ()
@@ -32,12 +36,17 @@ public class AudioData : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
+        frequency = GetFundamentalFrequency();
         AnalyseSound();
-        if(DbValue < -32.0f || DbValue > -25.0f)
-        {
-           BuildLine();
-        }    
-	}
+
+        //go.GetComponent<Transform>().Translate(0, Time.time * 5, 0);
+
+        //if(frequency < )
+
+
+
+
+    }
 
     private void BuildLine()
     {
@@ -46,15 +55,12 @@ public class AudioData : MonoBehaviour
 
         for (int i = 0; i < amnVisual; i++)
         {
-            GameObject go = GameObject.CreatePrimitive(PrimitiveType.Cube) as GameObject;
+            //go = GameObject.CreatePrimitive(PrimitiveType.Cube) as GameObject;
+            go.tag = "Note";
             visualList[i] = go.transform;
             visualList[i].position = Vector3.right * i;
+            
         }
-    }
-
-    private void Visualiser()
-    {
-
     }
 
     void AnalyseSound()
@@ -96,4 +102,24 @@ public class AudioData : MonoBehaviour
 
         pitchValue = freqN * (_fSample / 2) / SampleRate;
     }
+
+    float GetFundamentalFrequency()
+    {
+        float fundamentalFrequency = 0.0f;
+        float[] data = new float[8192];
+        GetComponent<AudioSource>().GetSpectrumData(data, 0, FFTWindow.BlackmanHarris);
+        float s = 0.0f;
+        int i = 0;
+        for (int j = 1; j < 8192; j++)
+        {
+            if (s < data[j])
+            {
+                s = data[j];
+                i = j;
+            }
+        }
+        fundamentalFrequency = i * samplerate / 8192;
+        return fundamentalFrequency;
+    }
+
 }
